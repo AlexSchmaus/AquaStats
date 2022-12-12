@@ -49,16 +49,17 @@ VALUES	('Freshwater'),
 
 CREATE TABLE dbo.AquariumSizes (
 	SizeID			int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	FriendlyName	varchar(128)	NOT NULL,
-	LengthInches	decimal(8,2)	NOT NULL,
+	FriendlyName	varchar(128)	NOT NULL,	
+	LengthInches	decimal(8,2)	NOT NULL,				-- is decimal(8,2) too restrictive? Eh, can always ALTER it later if need be....
 	WidthInches		decimal(8,2)	NOT NULL,
-	HeightInches	decimal(8,2)	NOT NULL,
-	VolumeGallons	decimal(8,2)	NOT NULL	-- calculate in SP from user inputed L/W/H
+	HeightInches	decimal(8,2)	NOT NULL,				-- is doing this in inches a bad idea? Alternate would be, what? cm / mm ?
+	VolumeGallons	decimal(8,2)	NOT NULL,				-- calculate in SP from user inputed L/W/H
+	isStandard		bit				NOT NULL	DEFAULT 1	-- is this a standard size, or did a user manually enter it?
 	)
 INSERT INTO dbo.AquariumSizes (FriendlyName, LengthInces, WidthInches, HeightInches, VolumeGallons)
-VALUES	('10 gallon', , , , ),
-		('20 gallon', , , , ),
-		('20 gallon long', , , , )
+VALUES	('10 gallon', 20, 10, 12, ),
+		('20 gallon', 24, 12, 16, ),
+		('20 gallon long', 30, 12, 12, )
 
 
 CREATE TABLE dbo.Aquariums (
