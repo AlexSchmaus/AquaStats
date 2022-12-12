@@ -3,7 +3,7 @@
 -- Author: Alex Schmaus
 -- Description: Function to calculate volume of a tank, in gallons, from given dimensions
 --
--- 12/12/22		Alex	The start of something new!
+-- 12/12/22		Alex	init
 -- 
 -------------------------------------------------------------------------------------------------------------------------------
 
