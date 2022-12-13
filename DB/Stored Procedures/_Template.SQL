@@ -18,7 +18,7 @@ GO
 
 -- To Do:
 -- [X] Get started!
--- [ ] Create type for logging
+-- [X] Create type for logging
 -- [ ] Create logging SP & exec - rather then this
 
 CREATE PROCEDURE dbo.Template
@@ -38,9 +38,10 @@ AS BEGIN TRY
 	INSERT INTO @Log
 	SELECT
 		concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 
+		0,
 		0, 
 		@json, 
-		'{}', 
+		'Sucessful', 
 		'{}', 
 		@@SPID, 
 		@SpState, 
@@ -58,7 +59,7 @@ AS BEGIN TRY
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
-	DECLARE @msg varchar(1024) = JSON_VALUE(@json, '$.msg')
+	DECLARE @Msg varchar(1024) = JSON_VALUE(@json, '$.msg')
 		
 	
 	-------------------------------------------------------------------------------------------------------------------------------
@@ -67,20 +68,27 @@ AS BEGIN TRY
 	
 	UPDATE @Log SET ExecTimeInMS = DATEDIFF_BIG(Millisecond, @TS, sysdatetime())
 
-	SELECT 
-		0 AS ReturnCode,
-		ExecTimeInMS,
-		@msg AS [Message]
-	FROM @Log
+	SELECT ErrorCode, ExecTimeInMS, ReturnMsg FROM @Log
+	SELECT @Msg AS PassedMessage
 
-	INSERT INTO Logging.SpLog (SpName, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
-	SELECT SpName, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
+	INSERT INTO Logging.SpLog (SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
+	SELECT SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
 		
 	RETURN 0
 
 END TRY
 BEGIN CATCH
-	SELECT @@ERROR, ERROR_LINE(), ERROR_MESSAGE()
+	
+	UPDATE @Log 
+	SET ErrorCode = ERROR_NUMBER(),
+		ExecTimeInMS = DATEDIFF_BIG(Millisecond, @TS, sysdatetime()),
+		ReturnMsg = concat('Error on line ', cast(ERROR_LINE() AS varchar(8)), ': ', ERROR_MESSAGE())
+		
+	SELECT ErrorCode, ExecTimeInMS, ReturnMsg FROM @Log
+
+	INSERT INTO Logging.SpLog (SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
+	SELECT SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
+	
 	RETURN 1
 END CATCH
 GO

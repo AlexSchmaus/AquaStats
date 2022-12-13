@@ -122,9 +122,11 @@ CREATE TABLE Readings.GeneralHardness (
 
 -------------------------------------------------------------------------------------------------------------------------------
 -- Logging, etc
+-- DROP TABLE IF EXISTS Logging.SpLog
 CREATE TABLE Logging.Splog (
 	RecordID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	SpName			varchar(256)	NOT NULL,
+	ErrorCode		int				NOT NULL,
 	ExecTimeInMS	int				NULL,
 	Parameter		varchar(4096)	NULL,		-- intended to be JSON
 	ReturnMsg		varchar(4096)	NULL,		-- intended to be JSON

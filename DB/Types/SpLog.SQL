@@ -16,6 +16,7 @@ GO
 
 CREATE TYPE SpLog AS TABLE (
 	SpName			varchar(256)	NOT NULL,
+	ErrorCode		int				NOT NULL,
 	ExecTimeInMS	int				NULL,
 	Parameter		varchar(4096)	NULL,		-- intended to be JSON
 	ReturnMsg		varchar(4096)	NULL,		-- intended to be JSON
