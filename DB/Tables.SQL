@@ -11,6 +11,7 @@
 -- [X] Get started!
 -- [-] Figure out how to handle saltwater vs freswater, etc
 -- [ ] Figure out how I want to handle timezones
+-- [ ] Figure out how to handle non-rectangular tanks
 
 
 CREATE DATABASE AquaStats
