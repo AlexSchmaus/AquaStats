@@ -78,46 +78,68 @@ SELECT 1, 3, 1	-- Alex schmaus has a 20 gallon long Freshwater
 
 -------------------------------------------------------------------------------------------------------------------------------
 -- Water Parameter readings
+DROP TABLE IF EXISTS Readings.PH
 CREATE TABLE Readings.PH (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	PH				decimal(3,1)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.Temperature
 CREATE TABLE Readings.Temperature (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	Temperature		decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.Ammonia
 CREATE TABLE Readings.Ammonia (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	Ammonia			decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.Nitrite
 CREATE TABLE Readings.Nitrite (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	Nitrite			decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.Nitrate
 CREATE TABLE Readings.Nitrate (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	Nitrate			decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.Alkalinity
 CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness 
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	Alkalinity		decimal(7,1)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
+DROP TABLE IF EXISTS Readings.GeneralHardness
 CREATE TABLE Readings.GeneralHardness (
-	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	TimeStamp		datetime		NOT NULL	
+	GeneralHardness decimal(7,1)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
+	)
+
+DROP TABLE IF EXISTS Readings.Phosphate
+CREATE TABLE Readings.Phosphate  (
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	Phosphate		decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
 	)
 
 -------------------------------------------------------------------------------------------------------------------------------
