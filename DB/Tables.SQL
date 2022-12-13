@@ -13,19 +13,21 @@
 -- [ ] Figure out how I want to handle timezones
 -- [ ] Figure out how to handle non-rectangular tanks
 
-
+/*
 CREATE DATABASE AquaStats
 GO
+*/
 
 USE AquaStats
 GO
 
-
+/*
 -- First, Schemas
 CREATE SCHEMA Logging
 GO
 CREATE SCHEMA Readings
 GO
+*/
 
 -- Create tables
 CREATE TABLE dbo.users (
@@ -57,19 +59,19 @@ CREATE TABLE dbo.AquariumSizes (
 	VolumeGallons	decimal(8,2)	NOT NULL,				-- calculate in SP from user inputed L/W/H
 	isStandard		bit				NOT NULL	DEFAULT 1	-- is this a standard size, or did a user manually enter it?
 	)
-INSERT INTO dbo.AquariumSizes (FriendlyName, LengthInces, WidthInches, HeightInches, VolumeGallons)
-VALUES	('10 gallon', 20, 10, 12, ),
-		('20 gallon', 24, 12, 16, ),
-		('20 gallon long', 30, 12, 12, )
+INSERT INTO dbo.AquariumSizes (FriendlyName, LengthInches, WidthInches, HeightInches, VolumeGallons)
+VALUES	('10 gallon', 20, 10, 12, 10),
+		('20 gallon', 24, 12, 16, 20),
+		('20 gallon long', 30, 12, 12, 20)
 
 
 CREATE TABLE dbo.Aquariums (
 	AquariumID		int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	UserID			int				NOT NULL	REFERENCES dbo.users(UserID),		-- who owns this aquarium?
-	AquariumSizeID	int				NOT NULL	REFERENCES dbo.AquariumSizes(AquariumSizeID),
-	AquariumTypeID	int				NOT			REFERENCES dbo.AquariumTypes(AquariumTypeID),
+	AquariumSizeID	int				NOT NULL	REFERENCES dbo.AquariumSizes(SizeID),
+	AquariumTypeID	int				NULL		REFERENCES dbo.AquariumTypes(TypeID)
 	)
-INSERT INTO dbo.Aquariums (UserID, AquariumSizeID, AquariumType)
+INSERT INTO dbo.Aquariums (UserID, AquariumSizeID, AquariumTypeID)
 SELECT 1, 3, 1	-- Alex schmaus has a 20 gallon long Freshwater
 
 
@@ -77,43 +79,57 @@ SELECT 1, 3, 1	-- Alex schmaus has a 20 gallon long Freshwater
 -------------------------------------------------------------------------------------------------------------------------------
 -- Water Parameter readings
 CREATE TABLE Readings.PH (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Temperature (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Ammonia (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Nitrite (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Nitrate (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness 
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.GeneralHardness (
-	ID				bigint			NOT NULL	IDENITY(1,1)	PRIMARY KEY,
+	ID				bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	TimeStamp		datetime		NOT NULL	
+	)
+
+-------------------------------------------------------------------------------------------------------------------------------
+-- Logging, etc
+CREATE TABLE Logging.Splog (
+	RecordID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	SpName			varchar(256)	NOT NULL,
+	ExecTimeInMS	int				NULL,
+	Parameter		varchar(4096)	NULL,		-- intended to be JSON
+	ReturnMsg		varchar(4096)	NULL,		-- intended to be JSON
+	AdditionalData	varchar(4096)	NULL,		-- intended to be JSON
+	ProcessID		int				NULL,
+	SpState			int				NULL,
+	ExecAt			datetime		NOT NULL	-- Local Server time
 	)
