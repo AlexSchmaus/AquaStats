@@ -1,6 +1,8 @@
 USE AquaStats
 GO
 
+-- Dropping and re-creating is an intentional move on my part. I have found some odd behvaior in the past with execution
+--	plans when ALTERing procedures
 DROP PROCEDURE IF EXISTS dbo.ProcName -- Old name
 DROP PROCEDURE IF EXISTS dbo.Template
 GO
@@ -32,6 +34,18 @@ AS BEGIN TRY
 	DECLARE @SpState int = 0
 	DECLARE @TS datetime2 = sysdatetime()
 	
+	DECLARE @Log SpLog 
+	INSERT INTO @Log
+	SELECT
+		concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 
+		0, 
+		@json, 
+		'{}', 
+		'{}', 
+		@@SPID, 
+		@SpState, 
+		@TS
+
 	
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Vars & param validation
@@ -51,21 +65,16 @@ AS BEGIN TRY
 	-- Standard Return & Logging
 	-------------------------------------------------------------------------------------------------------------------------------
 	
+	UPDATE @Log SET ExecTimeInMS = DATEDIFF_BIG(Millisecond, @TS, sysdatetime())
+
 	SELECT 
 		0 AS ReturnCode,
-		DATEDIFF_BIG(Millisecond, @TS, sysdatetime()) AS ExecTime_MS,
+		ExecTimeInMS,
 		@msg AS [Message]
+	FROM @Log
 
 	INSERT INTO Logging.SpLog (SpName, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
-	SELECT	
-		concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 
-		DATEDIFF_BIG(Millisecond, @TS, sysdatetime()), 
-		@json, 
-		'{}', 
-		'{}', 
-		@@SPID, 
-		@SpState, 
-		@TS
+	SELECT SpName, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
 		
 	RETURN 0
 

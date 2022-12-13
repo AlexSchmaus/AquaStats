@@ -1,3 +1,6 @@
+USE AquaStats
+GO
+
 -------------------------------------------------------------------------------------------------------------------------------
 --
 -- Author: Alex Schmaus
@@ -10,7 +13,6 @@
 -- To Do:
 -- [ ] Heh.... this assumes the tank is a perfect rectangle
 
-
 CREATE FUNCTION dbo.CalcVolume (
 	@L decimal(8,2),
 	@W decimal(8,2),
@@ -18,12 +20,9 @@ CREATE FUNCTION dbo.CalcVolume (
 	)
 RETURNS decimal(8,2)
 AS BEGIN
-
 	-- one gallon is 231 cubic inches
 	DECLARE @V decimal(8,2) = (@L * @W * @H) / 231
-
 	RETURN @V
-
 	END
 GO
 
