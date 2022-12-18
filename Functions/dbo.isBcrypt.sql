@@ -47,9 +47,8 @@ AS BEGIN
 	SET @STR = LTRIM(RTRIM(@STR))
 
 	-- First char of the string should be a delimiter, the '$' char
-	IF CHARINDEX('$', @STR) != 1 BEGIN
+	IF CHARINDEX('$', @STR) != 1
 		RETURN 0
-		END
 
 	ELSE BEGIN
 		-- Find all the delimiters in the hash
@@ -59,24 +58,20 @@ AS BEGIN
 		END
 
 	-- Length - Should be 60, but the algorith segment can be varied in length
-	IF LEN(@STR) NOT BETWEEN 58 AND 62 BEGIN 
+	IF LEN(@STR) NOT BETWEEN 58 AND 62
 		RETURN 0
-		END
 
 	-- Look for invalid characters in the hash
-	ELSE IF @STR LIKE '%[!,@,#,%,^,&,*,(,),-,_,+,=,:,;]%' BEGIN
+	ELSE IF @STR LIKE '%[!,@,#,%,^,&,*,(,),-,_,+,=,:,;]%'
 		RETURN 0
-		END
 
 	-- Check if the algorithm is Blowfish
-	ELSE IF LEFT(@STR, 2) != '$2' BEGIN
+	ELSE IF LEFT(@STR, 2) != '$2'
 		RETURN 0
-		END
 
 	-- Check Cost, a minimum we want a cost of 10
-	ELSE IF SUBSTRING(@STR, @D2+1, @D3-@D2-1) < 10 BEGIN
+	ELSE IF SUBSTRING(@STR, @D2+1, @D3-@D2-1) < 10
 		RETURN 0
-		END
 	
 	-- Otherwise, its good!
 	RETURN 1
