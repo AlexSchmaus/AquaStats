@@ -51,29 +51,28 @@ AS BEGIN TRY
 		END
 
     DECLARE @Ins table (UserID int)
+    DECLARE @Password varbinary(4000) = CAST('123' AS binary(3)) -- PLACEHOLDER
     
-    DECLARE @Password varbinary(4000) = 0x01
-    DECLARE @Salt varbinary(4000) = 0x01
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
 	INSERT INTO dbo.Users (
-        UserName	
-        EmailAddress
-        FirstName	
-        LastName	
-        [Password]	
-        [Hash]		
-    )
+        UserName,	
+        EmailAddress,
+        FirstName,	
+        LastName,	
+        [Password],	
+        Salt
+		)
     OUTPUT inserted.UserID INTO @Ins		
     SELECT 
-        json_values(@json, '$.UserName'),
-        json_values(@json, '$.EmailAddress'),
-        json_values(@json, '$.FirstName'),
-        json_values(@json, '$.LastName'),
-        @Password,
-        @Salt --convert(varchar(128), CRYPT_GEN_RANDOM(32), 2) 
+        json_value(@json, '$.UserName'),
+        json_value(@json, '$.EmailAddress'),
+        json_value(@json, '$.FirstName'),
+        json_value(@json, '$.LastName'),
+        @Password,		
+        CRYPT_GEN_RANDOM(128) --convert(varchar(256), CRYPT_GEN_RANDOM(32), 2) 
 
     IF (SELECT count(UserID) FROM @Ins) != 1 BEGIN 
         ;THROW 70100, 'Error saving user account', @SpState
@@ -86,7 +85,7 @@ AS BEGIN TRY
 	UPDATE @Log SET ExecTimeInMS = DATEDIFF_BIG(Millisecond, @TS, sysdatetime())
 
 	SELECT ErrorCode, ExecTimeInMS, ReturnMsg FROM @Log
-	SELECT @Msg AS PassedMessage
+	SELECT UserID FROM @Ins
 
 	INSERT INTO Logging.SpLog (SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
 	SELECT SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
@@ -109,3 +108,16 @@ BEGIN CATCH
 	RETURN 1
 END CATCH
 GO
+
+
+
+-- Quick Test --
+EXEC dbo.createUser '{
+"UserName":"Alex",
+"EmailAddress":"schmaus.a@gmail.com",
+"FirstName":"Alex",
+"LastName":"Schmaus"
+}'
+
+SELECT * FROM dbo.Users
+SELECT TOP 1 * FROM Logging.SpLog ORDER BY RecordID DESC

@@ -39,8 +39,11 @@ CREATE TABLE dbo.users (
 	FirstName		varchar(128)	NULL,
 	LastName		varchar(128)	NULL,
 	[Password]		varbinary(4000)	NOT NULL,
-	Salt			varbinary(4000)	NOT NULL
+	Salt			binary(128)		NOT NULL
 	)
+CREATE UNIQUE NONCLUSTERED INDEX uq_dboUsers_UserName
+ON dbo.Users(UserName)
+WHERE UserName IS NOT NULL
 
 
 CREATE TABLE dbo.AquariumTypes (
@@ -74,9 +77,6 @@ CREATE TABLE dbo.Aquariums (
 	AquariumSizeID	int				NOT NULL	REFERENCES dbo.AquariumSizes(SizeID),
 	AquariumTypeID	int				NULL		REFERENCES dbo.AquariumTypes(TypeID)
 	)
-INSERT INTO dbo.Aquariums (UserID, AquariumSizeID, AquariumTypeID)
-SELECT 1, 3, 1	-- Alex schmaus has a 20 gallon long Freshwater
-
 
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ CREATE TABLE Readings.GeneralHardness (
 	)
 
 DROP TABLE IF EXISTS Readings.Phosphate
-CREATE TABLE Readings.Phosphate� (
+CREATE TABLE Readings.Phosphate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Phosphate		decimal(5,2)	NOT NULL,
