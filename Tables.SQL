@@ -71,17 +71,17 @@ CREATE TABLE dbo.AquariumTypes (
 	FriendlyName	varchar(128)	NOT NULL
 )
 INSERT INTO dbo.AquariumTypes (FriendlyName)
-VALUES	('Community Freshwater'),
-		('Planted Tank'),
-		('Blackwater'),
-		('African Cichlid'),
-		('Discus'),
-		('Goldfish'),
-		('Coldwater'),
-		('Brackish'),
-		('Community Saltwater'),
-		('Reef'),
-		('Coldwater Marine')
+VALUES	('Community Freshwater'),	-- 1
+		('Planted Tank'),			-- 2
+		('Blackwater'),				-- 3
+		('African Cichlid'),		-- 4
+		('Discus'),					-- 5
+		('Goldfish'),				-- 6
+		('Coldwater'),				-- 7
+		('Brackish'),				-- 8
+		('Community Saltwater'),	-- 9
+		('Reef'),					-- 10
+		('Coldwater Marine')		-- 11
 		
 
 CREATE TABLE dbo.AquariumShapes (
@@ -106,7 +106,8 @@ CREATE TABLE dbo.Aquariums (
 	UserID			int				NOT NULL	REFERENCES dbo.users(UserID),		-- who owns this aquarium?
 	FriendlyName	varchar(256)	NULL,											-- like, "bedroom shrimp tank"
 	AquariumVolume	float(24)		NULL,
-	AquariumTypeID	int				NULL		REFERENCES dbo.AquariumTypes(TypeID)
+	AquariumTypeID	int				NULL		REFERENCES dbo.AquariumTypes(TypeID),
+	isDeleted		bit				NOT NULL	DEFAULT 0
 	)
 	
 -------------------------------------------------------------------------------------------------------------------------------

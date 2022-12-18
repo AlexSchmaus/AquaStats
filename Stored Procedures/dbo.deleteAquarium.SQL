@@ -1,24 +1,22 @@
 USE AquaStats
 GO
 
-DROP PROCEDURE IF EXISTS dbo.saveAquarium
+DROP PROCEDURE IF EXISTS dbo.deleteAquarium
 GO
 
 -------------------------------------------------------------------------------------------------------------------------------
 --
 -- Author:		Alex Schmaus
--- Description: Saves a new aquarium into the DB
+-- Description: (Soft) deletes an existing aquarium
 --
 -- 12/17/22		Alex	init
 -- 
 -------------------------------------------------------------------------------------------------------------------------------
 
 -- To Do:
--- [ ] Add Shape
--- [ ] How does this SP handle an update to a deleted aquarium?
 -- [ ]
 
-CREATE PROCEDURE dbo.saveAquarium
+CREATE PROCEDURE dbo.deleteAquarium
 	@json varchar(4000)
 AS BEGIN TRY
 	
@@ -52,34 +50,21 @@ AS BEGIN TRY
 		;THROW 50100, 'Param is invalid JSON object', @SpState
 		END
 
-    DECLARE @Ins table (AquariumID int)
+	DECLARE @AquariumID int = JSON_VALUE(@json, '$.AquariumID')
+	IF NOT EXISTS (SELECT 1 FROM dbo.Aquariums WHERE AquariumID = @AquariumID AND isDeleted = 0) BEGIN
+		;THROW 50500, 'Passed AquariumID is invalid, not found in DB', @SpState
+		END
+
+    DECLARE @Del table (AquariumID int)
     
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
-	MERGE dbo.Aquariums AQ
-	USING (
-		SELECT
-			*
-		FROM openjson(@json)
-		WITH (
-			UserID		int				'$.UserID',
-			[Name]		varchar(256)	'$.Name',
-			Volume		float(24)		'$.Vol',
-			TypeID		int				'$.TypeID',
-			AquariumID	int				'$.AquariumID'
-			)) AS src (UserID, Name, Volume, TypeID, AquariumID)
-	ON (AQ.AquariumID = src.AquariumID)
-	WHEN MATCHED THEN 
-		UPDATE 
-		SET FriendlyName = src.[Name],
-			AquariumVolume = src.Volume,
-			AquariumTypeID = TypeID
-	WHEN NOT MATCHED BY TARGET THEN
-		INSERT (UserID, FriendlyName, AquariumVolume, AquariumTypeID)
-		VALUES (src.UserID, src.Name, src.Volume, src.TypeID)
-	OUTPUT inserted.AquariumID INTO @Ins;
+	UPDATE dbo.Aquariums
+	SET isDeleted = 1
+	OUTPUT inserted.AquariumID INTO @Del
+	WHERE AquariumID = @AquariumID
 	
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Standard Return & Logging
@@ -88,7 +73,7 @@ AS BEGIN TRY
 	UPDATE @Log SET ExecTimeInMS = DATEDIFF_BIG(Millisecond, @TS, sysdatetime())
 
 	SELECT ErrorCode, ExecTimeInMS, ReturnMsg FROM @Log
-	SELECT AquariumID FROM @Ins
+	SELECT AquariumID AS DeletedAquariumID FROM @Del
 
 	INSERT INTO Logging.SpLog (SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt)
 	SELECT SpName, ErrorCode, ExecTimeInMS, Parameter, ReturnMsg, AdditionalData, ProcessID, SpState, ExecAt FROM @Log
@@ -114,25 +99,23 @@ GO
 
 
 
+-------------------------------------------------------------------------------------------------------------------------------
 -- Quick Test --
-EXEC dbo.saveAquarium '{
-"UserID":1, 
-"Name":"Big Tank", 
-"Vol":50.2, 
-"TypeID":3, 
-"AquariumID":null
+-------------------------------------------------------------------------------------------------------------------------------
+
+-- Shoudl succede	
+EXEC dbo.deleteAquarium '{
+"AquariumID":3
 }'
 
-EXEC dbo.saveAquarium '{
-"UserID":1, 
-"Name":"Reef Tank", 
-"Vol":100, 
-"TypeID":10,
-"AquariumID":null
+EXEC dbo.deleteAquarium '{
+"AquariumID":4
 }'
 
-SELECT 
-	AQ.*,
-	AQT.FriendlyName
-FROM dbo.Aquariums AQ 
-	LEFT JOIN AquariumTypes AQT ON AQ.AquariumTypeID = AQT.TypeID
+-- Should Error -> 50500
+EXEC dbo.deleteAquarium '{
+"AquariumID":999
+}'
+
+
+SELECT * FROM dbo.Aquariums
