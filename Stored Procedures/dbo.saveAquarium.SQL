@@ -31,18 +31,12 @@ AS BEGIN TRY
 	DECLARE @SpState int = 0
 	DECLARE @TS datetime2 = sysdatetime()
 	
+	-- Clean up the JSON payload (remove white spaces) -> ASCII code 9 is a tab, 13 is new line
+	SET @json = LTRIM(RTRIM(REPLACE(REPLACE(@json, char(13), ''), char(9), '')))
+
 	DECLARE @Log SpLog 
 	INSERT INTO @Log
-	SELECT
-		concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 
-		0,
-		0, 
-		@json, 
-		'Sucessful', 
-		'{}', 
-		@@SPID, 
-		@SpState, 
-		@TS
+	SELECT concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 0, 0, @json, 'Sucessful', '{}', @@SPID, @SpState, @TS
 
 	
 	-------------------------------------------------------------------------------------------------------------------------------

@@ -29,18 +29,12 @@ AS BEGIN TRY
 	DECLARE @SpState int = 0
 	DECLARE @TS datetime2 = sysdatetime()
 	
+	-- Clean up the JSON payload (remove white spaces) -> ASCII code 9 is a tab, 13 is new line
+	SET @json = LTRIM(RTRIM(REPLACE(REPLACE(@json, char(13), ''), char(9), '')))
+
 	DECLARE @Log SpLog 
 	INSERT INTO @Log
-	SELECT
-		concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 
-		0,
-		0, 
-		@json, 
-		'Sucessful', 
-		'{}', 
-		@@SPID, 
-		@SpState, 
-		@TS
+	SELECT concat(OBJECT_SCHEMA_NAME(@@PROCID), '.', OBJECT_NAME(@@PROCID)), 0, 0, @json, 'Sucessful', '{}', @@SPID, @SpState, @TS
 
 	
 	-------------------------------------------------------------------------------------------------------------------------------
@@ -51,8 +45,12 @@ AS BEGIN TRY
 		END
 
     DECLARE @Ins table (UserID int)
-    DECLARE @Password varbinary(4000) = CAST('123' AS binary(3)) -- PLACEHOLDER
-    
+	-- !! PLACEHOLDER !!
+    DECLARE @Password varbinary(4000) = CAST('123' AS binary(3)) 
+    -- !! PLACEHOLDER !!
+
+	DECLARE @Salt binary(128) = CRYPT_GEN_RANDOM(128) 
+
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
@@ -71,8 +69,8 @@ AS BEGIN TRY
         json_value(@json, '$.EmailAddress'),
         json_value(@json, '$.FirstName'),
         json_value(@json, '$.LastName'),
-        @Password,		
-        CRYPT_GEN_RANDOM(128) --convert(varchar(256), CRYPT_GEN_RANDOM(32), 2) 
+        HASHBYTES('SHA2_512', concat(@Password, convert(varchar(256), @Salt, 2))), 
+        @Salt
 
     IF (SELECT count(UserID) FROM @Ins) != 1 BEGIN 
         ;THROW 70100, 'Error saving user account', @SpState
