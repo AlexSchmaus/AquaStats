@@ -14,7 +14,7 @@ GO
 -------------------------------------------------------------------------------------------------------------------------------
 
 -- To Do:
--- [ ]
+-- [ ] Do I want to keep hashing of PWs here in the DB, or move it to the client & use bCrypt? I think this might be better
 
 CREATE PROCEDURE dbo.createUser
 	@json varchar(4000)
