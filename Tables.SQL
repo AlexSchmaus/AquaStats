@@ -27,17 +27,20 @@ CREATE SCHEMA Logging
 GO
 CREATE SCHEMA Readings
 GO
+CREATE SCHEMA util
+GO
 */
 
 -- Create tables
 CREATE TABLE dbo.users (
 	UserID			int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	UserName		varchar(128)	NULL,		-- by default, emailAddress = UN
 	EmailAddress	varchar(256)	NOT NULL	UNIQUE,
 	FirstName		varchar(128)	NULL,
-	LastName		varchar(128)	NULL
+	LastName		varchar(128)	NULL,
+	[Password]		varbinary(4000)	NOT NULL,
+	Salt			varbinary(4000)	NOT NULL
 	)
-INSERT INTO dbo.Users (EmailAddress, FirstName, LastName)
-VALUES ('schmaus.a@gmail.com', 'Alex', 'Schmaus')
 
 
 CREATE TABLE dbo.AquariumTypes (
@@ -135,7 +138,7 @@ CREATE TABLE Readings.GeneralHardness (
 	)
 
 DROP TABLE IF EXISTS Readings.Phosphate
-CREATE TABLE Readings.Phosphate  (
+CREATE TABLE Readings.Phosphateï¿½ (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Phosphate		decimal(5,2)	NOT NULL,
@@ -157,3 +160,23 @@ CREATE TABLE Logging.Splog (
 	SpState			int				NULL,
 	ExecAt			datetime		NOT NULL	-- Local Server time
 	)
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+-- Numbers table
+-------------------------------------------------------------------------------------------------------------------------------
+DROP TABLE IF EXISTS util.numbers
+CREATE TABLE util.Numbers (
+	Number			int				NOT NULL	IDENTITY(0,1) PRIMARY KEY,
+	a				int				NULL	
+	)
+INSERT INTO util.Numbers (a)
+SELECT TOP 1000
+	 1
+FROM sys.Objects O1
+	CROSS APPLY sys.objects O2
+ALTER TABLE util.Numbers DROP COLUMN a
+
+SELECT TOP 10 * FROM util.numbers
+SELECT count(*) FROM util.numbers
