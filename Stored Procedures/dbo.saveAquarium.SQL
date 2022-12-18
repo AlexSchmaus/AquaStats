@@ -56,7 +56,28 @@ AS BEGIN TRY
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
-	SELECT 1
+	MERGE dbo.Aquariums AQ
+	USING (
+		SELECT
+			*
+		FROM openjson(@json)
+		WITH (
+			UserID		int				'$.UserID',
+			[Name]		varchar(256)	'$.Name',
+			Volume		float(24)		'$.Vol',
+			TypeID		int				'$.TypeID',
+			AquariumID	int				'$.AquariumID'
+			)) AS src (UserID, Name, Volume, TypeID, AquariumID)
+	ON (AQ.AquariumID = src.AquariumID)
+	WHEN MATCHED THEN 
+		UPDATE 
+		SET FriendlyName = src.[Name],
+			AquariumVolume = src.Volume,
+			AquariumTypeID = TypeID
+	WHEN NOT MATCHED BY TARGET THEN
+		INSERT (UserID, FriendlyName, AquariumVolume, AquariumTypeID)
+		VALUES (src.UserID, src.Name, src.Volume, src.TypeID)
+	OUTPUT inserted.AquariumID INTO @Ins;
 	
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Standard Return & Logging
@@ -92,12 +113,12 @@ GO
 
 
 -- Quick Test --
-EXEC dbo.createUser '{
-"UserName":"Alex",
-"EmailAddress":"schmaus.a@gmail.com",
-"FirstName":"Alex",
-"LastName":"Schmaus"
+EXEC dbo.saveAquarium '{
+"UserID":1, 
+"Name":"Big Tank", 
+"Vol":50.2, 
+"TypeID":3, 
+"AquariumID":null
 }'
 
-SELECT * FROM dbo.Users
-SELECT TOP 1 * FROM Logging.SpLog ORDER BY RecordID DESC
+SELECT * FROM dbo.Aquariums

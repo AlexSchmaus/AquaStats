@@ -41,6 +41,8 @@ DROP TABLE IF EXISTS Readings.Nitrate
 DROP TABLE IF EXISTS Readings.Alkalinity
 DROP TABLE IF EXISTS Readings.GeneralHardness
 DROP TABLE IF EXISTS Readings.Phosphate
+DROP TABLE IF EXISTS Readings.TDS
+DROP TABLE IF EXISTS Readings.Salinity
 
 DROP TABLE IF EXISTS dbo.Aquariums
 DROP TABLE IF EXISTS dbo.AquariumTypes
