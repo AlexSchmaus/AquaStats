@@ -160,23 +160,3 @@ CREATE TABLE Logging.Splog (
 	SpState			int				NULL,
 	ExecAt			datetime		NOT NULL	-- Local Server time
 	)
-
-
-
--------------------------------------------------------------------------------------------------------------------------------
--- Numbers table
--------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS util.numbers
-CREATE TABLE util.Numbers (
-	Number			int				NOT NULL	IDENTITY(0,1) PRIMARY KEY,
-	a				int				NULL	
-	)
-INSERT INTO util.Numbers (a)
-SELECT TOP 1000
-	 1
-FROM sys.Objects O1
-	CROSS APPLY sys.objects O2
-ALTER TABLE util.Numbers DROP COLUMN a
-
-SELECT TOP 10 * FROM util.numbers
-SELECT count(*) FROM util.numbers

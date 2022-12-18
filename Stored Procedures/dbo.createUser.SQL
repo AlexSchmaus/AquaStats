@@ -73,7 +73,7 @@ AS BEGIN TRY
         json_values(@json, '$.FirstName'),
         json_values(@json, '$.LastName'),
         @Password,
-        @Salt
+        @Salt --convert(varchar(128), CRYPT_GEN_RANDOM(32), 2) 
 
     IF (SELECT count(UserID) FROM @Ins) != 1 BEGIN 
         ;THROW 70100, 'Error saving user account', @SpState

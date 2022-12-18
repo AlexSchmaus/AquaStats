@@ -36,5 +36,3 @@ GO
 SELECT * FROM dbo.RandomChar
 GO
 
-
-SELECT TOP 1 Number FROM util.numbers WHERE Number BETWEEN 1 AND 3 ORDER BY newid()
