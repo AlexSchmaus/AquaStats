@@ -31,6 +31,24 @@ CREATE SCHEMA util
 GO
 */
 
+DROP TABLE IF EXISTS Logging.SpLog
+
+DROP TABLE IF EXISTS Readings.PH
+DROP TABLE IF EXISTS Readings.Temperature
+DROP TABLE IF EXISTS Readings.Ammonia
+DROP TABLE IF EXISTS Readings.Nitrite
+DROP TABLE IF EXISTS Readings.Nitrate
+DROP TABLE IF EXISTS Readings.Alkalinity
+DROP TABLE IF EXISTS Readings.GeneralHardness
+DROP TABLE IF EXISTS Readings.Phosphate
+
+DROP TABLE IF EXISTS dbo.Aquariums
+DROP TABLE IF EXISTS dbo.AquariumTypes
+DROP TABLE IF EXISTS dbo.AquariumSizes
+DROP TABLE IF EXISTS dbo.AquariumShapes
+DROP TABLE IF EXISTS dbo.Users
+
+
 -- Create tables
 CREATE TABLE dbo.users (
 	UserID			int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
@@ -51,37 +69,46 @@ CREATE TABLE dbo.AquariumTypes (
 	FriendlyName	varchar(128)	NOT NULL
 )
 INSERT INTO dbo.AquariumTypes (FriendlyName)
-VALUES	('Freshwater'),
-		('Saltwater'),
-		('Blackwater')	-- should this be a 'sub-type'?
+VALUES	('Community Freshwater'),
+		('Planted Tank'),
+		('Blackwater'),
+		('African Cichlid'),
+		('Discus'),
+		('Goldfish'),
+		('Coldwater'),
+		('Brackish'),
+		('Community Saltwater'),
+		('Reef'),
+		('Coldwater Marine')
+		
 
-
-CREATE TABLE dbo.AquariumSizes (
-	SizeID			int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	FriendlyName	varchar(128)	NOT NULL,	
-	LengthInches	decimal(8,2)	NOT NULL,				-- is decimal(8,2) too restrictive? Eh, can always ALTER it later if need be....
-	WidthInches		decimal(8,2)	NOT NULL,
-	HeightInches	decimal(8,2)	NOT NULL,				-- is doing this in inches a bad idea? Alternate would be, what? cm / mm ?
-	VolumeGallons	decimal(8,2)	NOT NULL,				-- calculate in SP from user inputed L/W/H
-	isStandard		bit				NOT NULL	DEFAULT 1	-- is this a standard size, or did a user manually enter it?
+CREATE TABLE dbo.AquariumShapes (
+	ShapeID			int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	ShapeName		varchar(128)	NOT NULL,
 	)
-INSERT INTO dbo.AquariumSizes (FriendlyName, LengthInches, WidthInches, HeightInches, VolumeGallons)
-VALUES	('10 gallon', 20, 10, 12, 10),
-		('20 gallon', 24, 12, 16, 20),
-		('20 gallon long', 30, 12, 12, 20)
+INSERT INTO dbo.AquariumShapes
+VALUES	('Rectangular'),			
+		('Cube'),
+		('Hexagonal'),
+		('Octagonal'),
+		('Bow Front'),
+		('Cylindrical'),
+		('Half Cylinder'),
+		('Double Bullnose'),
+		('Quater Cylinder'),
+		('Triangular')
 
 
 CREATE TABLE dbo.Aquariums (
 	AquariumID		int				NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	UserID			int				NOT NULL	REFERENCES dbo.users(UserID),		-- who owns this aquarium?
-	AquariumSizeID	int				NOT NULL	REFERENCES dbo.AquariumSizes(SizeID),
+	FriendlyName	varchar(256)	NULL,											-- like, "bedroom shrimp tank"
+	AquariumVolume	float(24)		NULL,
 	AquariumTypeID	int				NULL		REFERENCES dbo.AquariumTypes(TypeID)
 	)
-
-
+	
 -------------------------------------------------------------------------------------------------------------------------------
 -- Water Parameter readings
-DROP TABLE IF EXISTS Readings.PH
 CREATE TABLE Readings.PH (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -89,15 +116,13 @@ CREATE TABLE Readings.PH (
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.Temperature
 CREATE TABLE Readings.Temperature (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Temperature		decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
-
-DROP TABLE IF EXISTS Readings.Ammonia
+	
 CREATE TABLE Readings.Ammonia (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -105,7 +130,6 @@ CREATE TABLE Readings.Ammonia (
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.Nitrite
 CREATE TABLE Readings.Nitrite (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -113,7 +137,6 @@ CREATE TABLE Readings.Nitrite (
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.Nitrate
 CREATE TABLE Readings.Nitrate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -121,7 +144,6 @@ CREATE TABLE Readings.Nitrate (
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.Alkalinity
 CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness 
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -129,7 +151,6 @@ CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.GeneralHardness
 CREATE TABLE Readings.GeneralHardness (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
@@ -137,13 +158,27 @@ CREATE TABLE Readings.GeneralHardness (
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
-DROP TABLE IF EXISTS Readings.Phosphate
 CREATE TABLE Readings.Phosphate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
 	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Phosphate		decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
+
+CREATE TABLE Readings.tds (
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	tds				decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
+	)
+
+CREATE TABLE Readings.Salinity (
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	Salinity		decimal(5,2)	NOT NULL,
+	[TimeStamp]		datetime		NOT NULL	
+	)
+
 
 -------------------------------------------------------------------------------------------------------------------------------
 -- Logging, etc
