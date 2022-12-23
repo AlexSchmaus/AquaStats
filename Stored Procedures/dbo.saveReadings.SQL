@@ -90,7 +90,7 @@ AS BEGIN TRY
 		GeneralHardness = LTRIM(RTRIM(JSON_VALUE(@json, '$.Readings.GeneralHardness'))),
 		Phosphate		= NULL -- I'm not really ready to handle saltwater, yet
 
-	INSERT INTO Readings.Ph (AquriumID, PH, [TimeStamp])
+	INSERT INTO Readings.Ph (AquariumID, PH, [TimeStamp])
 	SELECT 
 		AquariumID,
 		PH,
@@ -99,7 +99,7 @@ AS BEGIN TRY
 	FROM @Readings 
 	WHERE PH IS NOT NULL
 
-	INSERT INTO Readings.Temperature (AquriumID, Temperature, [TimeStamp])
+	INSERT INTO Readings.Temperature (AquariumID, Temperature, [TimeStamp])
 	SELECT
 		AquariumID,
 		Temperature,
@@ -107,7 +107,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE Temperature IS NOT NULL		
 	
-	INSERT INTO Readings.Ammonia (AquriumID, Ammonia, [TimeStamp])
+	INSERT INTO Readings.Ammonia (AquariumID, Ammonia, [TimeStamp])
 	SELECT
 		AquariumID,
 		Ammonia,
@@ -115,7 +115,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE Ammonia IS NOT NULL
 
-	INSERT INTO Readings.Nitrite (AquriumID, Nitrite, [TimeStamp])
+	INSERT INTO Readings.Nitrite (AquariumID, Nitrite, [TimeStamp])
 	SELECT
 		AquariumID,
 		Nitrite,
@@ -123,7 +123,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE Nitrite IS NOT NULL
 
-	INSERT INTO Readings.Nitrate (AquriumID, Nitrate, [TimeStamp])
+	INSERT INTO Readings.Nitrate (AquariumID, Nitrate, [TimeStamp])
 	SELECT
 		AquariumID,
 		Nitrate,
@@ -131,7 +131,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE Nitrate IS NOT NULL
 
-	INSERT INTO Readings.Alkalinity (AquriumID, Alkalinity, [TimeStamp])
+	INSERT INTO Readings.Alkalinity (AquariumID, Alkalinity, [TimeStamp])
 	SELECT
 		AquariumID,
 		Alkalinity,
@@ -139,7 +139,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE Alkalinity IS NOT NULL
 
-	INSERT INTO Readings.GeneralHardness (AquriumID, GeneralHardness, [TimeStamp])
+	INSERT INTO Readings.GeneralHardness (AquariumID, GeneralHardness, [TimeStamp])
 	SELECT
 		AquariumID,
 		GeneralHardness,
@@ -147,7 +147,7 @@ AS BEGIN TRY
 	FROM @Readings
 	WHERE GeneralHardness IS NOT NULL
 
-	INSERT INTO Readings.Phosphate (AquriumID, Phosphate, [TimeStamp])
+	INSERT INTO Readings.Phosphate (AquariumID, Phosphate, [TimeStamp])
 	SELECT
 		AquariumID,
 		Phosphate,
@@ -192,8 +192,8 @@ GO
 EXEC dbo.saveReadings '{
 	"AquariumID":1,
 	"Readings":{
-		"PH":7.2,
-		"Temperature":78.5,
+		"PH":7.1,
+		"Temperature":79,
 		"Ammonia":0.0,
 		"Nitrite":0.25,
 		"Nitrate":10,

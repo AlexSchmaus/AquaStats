@@ -131,70 +131,70 @@ CREATE TABLE dbo.Aquariums (
 -- Water Parameter readings
 CREATE TABLE Readings.PH (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	PH				decimal(3,1)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Temperature (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Temperature		decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 	
 CREATE TABLE Readings.Ammonia (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Ammonia			decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Nitrite (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Nitrite			decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Nitrate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Nitrate			decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness 
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Alkalinity		decimal(7,1)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.GeneralHardness (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	GeneralHardness decimal(7,1)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Phosphate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Phosphate		decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.tds (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	tds				decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
 
 CREATE TABLE Readings.Salinity (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquriumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Salinity		decimal(5,2)	NOT NULL,
 	[TimeStamp]		datetime		NOT NULL	
 	)
