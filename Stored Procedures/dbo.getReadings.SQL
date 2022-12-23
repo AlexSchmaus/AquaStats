@@ -51,6 +51,27 @@ AS BEGIN TRY
 		SET @AquariumID = 1
 		END
 
+
+	DECLARE @StartDate datetime = json_value(@json, '$.StartDate')
+	IF @StartDate IS NULL BEGIN
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+		SET @StartDate = (SELECT min([TimeStamp]) FROM Readings.Temperature)
+		END
+
+	DECLARE @StopDate datetime = json_value(@json, '$.StopDate')
+	IF @StopDate IS NULL BEGIN
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+-- This is not quite right, as it assumes a temperature reading was the first type of reading taken
+		SET @StopDate = (SELECT max([TimeStamp]) FROM Readings.Temperature)
+		END
+
+	DECLARE @TimeSpan int = datediff(second, @StartDate, @StopDate)
+
     DECLARE @R table (
 		AquariumID int,
 		TS datetime,
@@ -58,37 +79,43 @@ AS BEGIN TRY
 		PH decimal(3,1)
 		)
     
+		SELECT @AquariumID, @StartDate, @StopDate
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
 
 	-- round timestamps to the nearest minute & combine
-	;WITH cTime AS (
+	;WITH 
+	cTime AS (
 		SELECT
-			AQ.AquariumID,
-			RT.Temperature,
-			COALESCE(
-				format(RT.[TimeStamp], 'yyyy-MM-dd hh:mm'),
-				format(RP.[TimeStamp], 'yyyy-MM-dd hh:mm')) AS TS,
-			RP.PH
-		FROM dbo.Aquariums AQ
-			LEFT JOIN Readings.Temperature RT ON AQ.AquariumID = RT.AquariumID
-			LEFT JOIN Readings.PH RP ON AQ.AquariumID = RP.AquariumID
-		WHERE 
-			AQ.AquariumID = @AquariumID
+			format(dateadd(second, N.Number, @StartDate), 'yyyy-MM-dd hh:mm:ss') AS TS
+		FROM Util.Numbers N
+		WHERE N.Number <= @TimeSpan
+		),
+	cTemp AS (
+		SELECT
+			Temperature,
+			format([TimeStamp], 'yyyy-MM-dd hh:mm:ss') AS TS
+		FROM Readings.Temperature
+		WHERE AquariumID = @AquariumID
+			AND [TimeStamp] BETWEEN @StartDate AND @StopDate
+		),
+	cPH AS (
+		SELECT
+			PH,
+			format([TimeStamp], 'yyyy-MM-dd hh:mm:ss') AS TS
+		FROM Readings.PH
+		WHERE AquariumID = @AquariumID
+			AND [TimeStamp] BETWEEN @StartDate AND @StopDate
 		)
-	-- then, average the readings for each min
-	INSERT INTO @R
 	SELECT
-		AquariumID,
-		TS,
-		avg(Temperature),
-		min(PH)
-	FROM cTime
-	GROUP BY AquariumID, TS
+		*
+	FROM cTime TI
+		LEFT JOIN cTemp TE ON TI.TS = TE.TS
+		LEFT JOIN cPH PH ON TI.TS = PH.TS
+		 
 
--- !!! PH grouping is wrong !!!
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Standard Return & Logging
@@ -124,4 +151,5 @@ GO
 
 
 -- Quick Test --
-EXEC dbo.getReadings '{}'
+EXEC dbo.getReadings '{"AquariumID":1}'
+

@@ -214,3 +214,17 @@ CREATE TABLE Logging.Splog (
 	SpState			int				NULL,
 	ExecAt			datetime		NOT NULL	-- Local Server time
 	)
+
+
+DROP TABLE IF EXISTS util.Numbers
+CREATE TABLE util.Numbers (Number int NOT NULL)
+
+INSERT INTO util.Numbers (Number)
+SELECT 
+	ROW_NUMBER() OVER (ORDER BY O1.object_ID)
+FROM sys.objects O1
+	CROSS APPLY sys.objects O2
+	CROSS APPLY sys.objects O3
+
+ALTER TABLE util.Numbers ADD CONSTRAINT PK_uNumbers PRIMARY KEY CLUSTERED (Number)
+
