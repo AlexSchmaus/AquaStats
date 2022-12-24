@@ -10,6 +10,7 @@ GO
 -- Description: gets overview of water parameters
 --
 -- 12/22/22		Alex	init
+-- 12/24/22		Alex	Updated to reflect changes in schema (EventID)
 -- 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,22 +53,14 @@ AS BEGIN TRY
 		END
 
 
-	DECLARE @StartDate datetime = json_value(@json, '$.StartDate')
+	DECLARE @StartDate datetime2 = json_value(@json, '$.StartDate')
 	IF @StartDate IS NULL BEGIN
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
-		SET @StartDate = (SELECT min([TimeStamp]) FROM Readings.Temperature WHERE AquariumID = @AquariumID)
+		SET @StartDate = (SELECT min([TimeStamp]) FROM Readings.[Events] WHERE AquariumID = @AquariumID)
 		END
 
-	DECLARE @StopDate datetime = json_value(@json, '$.StopDate')
+	DECLARE @StopDate datetime2 = json_value(@json, '$.StopDate')
 	IF @StopDate IS NULL BEGIN
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
--- This is not quite right, as it assumes a temperature reading was the first type of reading taken
-		SET @StopDate = (SELECT max([TimeStamp]) FROM Readings.Temperature WHERE AquariumID = @AquariumID)
+		SET @StopDate = (SELECT max([TimeStamp]) FROM Readings.[Events] WHERE AquariumID = @AquariumID)
 		END
 
 	DECLARE @TimeSpan int = datediff(second, @StartDate, @StopDate)
@@ -79,42 +72,55 @@ AS BEGIN TRY
 		PH decimal(3,1)
 		)
     
-		SELECT @AquariumID, @StartDate, @StopDate
 
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Logic
 	-------------------------------------------------------------------------------------------------------------------------------
 
-	-- round timestamps to the nearest minute & combine
+	-- get every second between the start and stop date, then convert them into an int
 	;WITH 
 	cTime AS (
+		SELECT datediff(second, '2022-01-01', @StartDate) AS TS
+		UNION ALL
 		SELECT
-			format(dateadd(second, N.Number, @StartDate), 'yyyy-MM-dd hh:mm:ss') AS TS
+			datediff(second, '2022-01-01', @StartDate) + N.Number AS TS
 		FROM Util.Numbers N
 		WHERE N.Number <= @TimeSpan
 		),
-	cTemp AS (
+	-- get all data points between the start and stop date
+	cReadings AS (
 		SELECT
-			Temperature,
-			format([TimeStamp], 'yyyy-MM-dd hh:mm:ss') AS TS
-		FROM Readings.Temperature
-		WHERE AquariumID = @AquariumID
-			AND [TimeStamp] BETWEEN @StartDate AND @StopDate
-		),
-	cPH AS (
-		SELECT
-			PH,
-			format([TimeStamp], 'yyyy-MM-dd hh:mm:ss') AS TS
-		FROM Readings.PH
-		WHERE AquariumID = @AquariumID
+			Temp.Temperature,
+			PH.ph,
+			NH3.Ammonia,
+			NO2.Nitrite,
+			NO3.Nitrate,
+			datediff(second, '2022-01-01', [TimeStamp]) AS TS
+		FROM Readings.[Events] E
+			LEFT JOIN Readings.Temperature Temp ON E.EventID = Temp.EventID
+			LEFT JOIN Readings.PH PH ON E.EventID = PH.EventID
+			LEFT JOIN Readings.Ammonia NH3 ON E.EventID = NH3.EventID
+			LEFT JOIN Readings.Nitrite NO2 ON E.EventID = NO2.EventID
+			LEFT JOIN Readings.Nitrate NO3 ON E.EventID = NO3.EventID
+		WHERE 
+			AquariumID = @AquariumID
 			AND [TimeStamp] BETWEEN @StartDate AND @StopDate
 		)
+	-- join & Spread the data onto time - this way there are no gaps in the data, so we can chart it
+	-- GROUP BY & AVG to condense time - one reading per second
+	-- turn the timestamp (TS) back into a human readable date time
 	SELECT
-		*
+		format(dateadd(second, TI.TS, '2022-01-01'), 'MM/dd/yy hh:mm:ss') AS DTString,
+		AVG(Temperature) AS Temperature,
+		AVG(ph) AS ph,
+		AVG(Ammonia) AS Ammonia,
+		AVG(Nitrite) AS Nitrite,
+		AVG(Nitrate) AS Nitrate
 	FROM cTime TI
-		LEFT JOIN cTemp TE ON TI.TS = TE.TS
-		LEFT JOIN cPH PH ON TI.TS = PH.TS
-		 
+		LEFT JOIN cReadings cR ON TI.TS = cR.TS
+	GROUP BY TI.TS
+	ORDER BY TI.TS
+	
 
 
 	-------------------------------------------------------------------------------------------------------------------------------

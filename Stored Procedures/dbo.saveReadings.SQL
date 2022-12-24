@@ -235,6 +235,7 @@ GO
 
 SELECT TOP 1 * FROM Logging.SpLog ORDER BY RecordID DESC
 
-SELECT * FROM Readings.PH
+SELECT * FROM Readings.[Events]
 SELECT * FROM Readings.Temperature
+SELECT * FROM Readings.PH
 SELECT * FROM Readings.Ammonia
