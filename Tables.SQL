@@ -4,13 +4,15 @@
 -- Description: Tables / schema for AquaStats
 --
 -- 12/12/22		Alex	The start of something new!
+-- 12/24/22		Alex	There is now a reading event, and the indvl readings belong to one (1) event. 
+--						Also added table for Turbidity. Also moved to a datetimeoffset
 -- 
 -------------------------------------------------------------------------------------------------------------------------------
 
 -- To Do:
 -- [X] Get started!
 -- [-] Figure out how to handle saltwater vs freswater, etc
--- [ ] Figure out how I want to handle timezones
+-- [-] Figure out how I want to handle timezones
 -- [-] Figure out how to handle non-rectangular tanks
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -56,6 +58,8 @@ DROP TABLE IF EXISTS Readings.GeneralHardness
 DROP TABLE IF EXISTS Readings.Phosphate
 DROP TABLE IF EXISTS Readings.TDS
 DROP TABLE IF EXISTS Readings.Salinity
+DROP TABLE IF EXISTS Readings.Turbidity
+DROP TABLE IF EXISTS Readings.[Events]
 
 DROP TABLE IF EXISTS dbo.Aquariums
 DROP TABLE IF EXISTS dbo.AquariumTypes
@@ -74,7 +78,8 @@ CREATE TABLE dbo.users (
 	FirstName		varchar(128)	NULL,
 	LastName		varchar(128)	NULL,
 	[Password]		varbinary(4000)	NOT NULL,
-	Salt			binary(128)		NOT NULL
+	Salt			binary(128)		NOT NULL,
+	Timezone		varchar(128)	NOT NULL	DEFAULT 'utc'
 	)
 -- By default UserName is the user's email address. UserName is optional. Therefore, we cannot add
 --	a unique contstraint to UserName, as NULL across more then one would violate this
@@ -129,76 +134,77 @@ CREATE TABLE dbo.Aquariums (
 	
 -------------------------------------------------------------------------------------------------------------------------------
 -- Water Parameter readings
+CREATE TABLE Readings.[Events](
+	EventID			bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
+	[TimeStamp]		datetimeoffset	NOT NULL	
+	)
+
 CREATE TABLE Readings.PH (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	PH				decimal(3,1)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Temperature (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
-	Temperature		decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	Temperature		decimal(5,2)	NOT NULL,	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 	
 CREATE TABLE Readings.Ammonia (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Ammonia			decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Nitrite (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Nitrite			decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Nitrate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Nitrate			decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Alkalinity ( -- aka Carbonate hardness 
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Alkalinity		decimal(7,1)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.GeneralHardness (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	GeneralHardness decimal(7,1)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Phosphate (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Phosphate		decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.tds (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	tds				decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
 CREATE TABLE Readings.Salinity (
 	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
-	AquariumID		int				NOT NULL	REFERENCES dbo.Aquariums(AquariumID),
 	Salinity		decimal(5,2)	NOT NULL,
-	[TimeStamp]		datetime		NOT NULL	
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
 	)
 
+CREATE TABLE Turbidity (
+	ReadingID		bigint			NOT NULL	IDENTITY(1,1)	PRIMARY KEY,
+	Turbidity		decimal(6,1)	NOT NULL,	-- Nephelometric Turbidity Units, NTU >> 0.1NTU, 150NTU, etc
+	EventID			bigint			NOT NULL	REFERENCES Readings.[Events](EventID)
+	)
 
 -------------------------------------------------------------------------------------------------------------------------------
 -- Logging, etc

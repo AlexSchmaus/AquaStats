@@ -58,7 +58,7 @@ AS BEGIN TRY
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
-		SET @StartDate = (SELECT min([TimeStamp]) FROM Readings.Temperature)
+		SET @StartDate = (SELECT min([TimeStamp]) FROM Readings.Temperature WHERE AquariumID = @AquariumID)
 		END
 
 	DECLARE @StopDate datetime = json_value(@json, '$.StopDate')
@@ -67,7 +67,7 @@ AS BEGIN TRY
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
 -- This is not quite right, as it assumes a temperature reading was the first type of reading taken
-		SET @StopDate = (SELECT max([TimeStamp]) FROM Readings.Temperature)
+		SET @StopDate = (SELECT max([TimeStamp]) FROM Readings.Temperature WHERE AquariumID = @AquariumID)
 		END
 
 	DECLARE @TimeSpan int = datediff(second, @StartDate, @StopDate)

@@ -12,6 +12,7 @@ GO
 -- Description: Saves water parameters
 --
 -- 12/13/22		Alex	init
+-- 12/24/22		Alex	Modified to account for change to schema & addition on reading events
 -- 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -42,11 +43,6 @@ AS BEGIN TRY
 	-------------------------------------------------------------------------------------------------------------------------------
 	-- Vars & param validation
 	-------------------------------------------------------------------------------------------------------------------------------
-	IF ISJSON(@json) != 1 BEGIN
-		;THROW 50100, 'Param is invalid JSON object', @SpState
-		END
-
-
 	-- I expect a JSON payload that looks like this:
 	/*
 	'{
@@ -62,7 +58,31 @@ AS BEGIN TRY
 			}
 	}'
 	*/
+
+
+	-- Validate some params
+	IF ISJSON(@json) != 1 BEGIN
+		;THROW 50100, 'Param is invalid JSON object', @SpState
+		END
+
+	DECLARE @AquariumID int = json_value(@json, '$.AquariumID')
+	IF NOT EXISTS (SELECT 1 FROM dbo.Aquariums WHERE AquariumID = @AquariumID) BEGIN
+		;THROW 50200, 'AquariumID is invalid, not found in DB.', @SpState
+		END
+
+	DECLARE @UserID int = (SELECT UserID FROM dbo.Aquariums WHERE AquariumID = @AquariumID)
+	IF @UserID IS NULL BEGIN
+		;THROW 50300, 'There is no user associtated to this aquarium. You should never see this error!', @SpState
+		END
+
+	DECLARE @TZ varchar(128)
+	SELECT
+		@TZ = coalesce(Timezone, 'UTC')
+	FROM dbo.Users
+	WHERE UserID = @UserID
 		
+
+	-- this will hold the readings
 	DECLARE @Readings table (
 		AquariumID int, 
 		PH decimal(5,2),
@@ -70,17 +90,14 @@ AS BEGIN TRY
 		Ammonia decimal(5,2),
 		Nitrite decimal(5,2),
 		Nitrate decimal(5,2),
-		Alkalinity decimal(7,1),		-- in PPM
-		GeneralHardness  decimal(7,1),	-- in PPM
+		Alkalinity decimal(7,1),	
+		GeneralHardness  decimal(7,1),
 		Phosphate decimal(5,2)
 		)
-
-	-------------------------------------------------------------------------------------------------------------------------------
-	-- Logic
-	-------------------------------------------------------------------------------------------------------------------------------
+	-- get water parameter info out of JSON param
 	INSERT INTO @Readings
 	SELECT
-		AquariumID		= JSON_VALUE(@json, '$.AquariumID'),
+		AquariumID		= @AquariumID,
 		PH				= LTRIM(RTRIM(JSON_VALUE(@json, '$.Readings.PH'))),
 		Temperature		= LTRIM(RTRIM(JSON_VALUE(@json, '$.Readings.Temperature'))),
 		Ammonia			= LTRIM(RTRIM(JSON_VALUE(@json, '$.Readings.Ammonia'))),
@@ -90,68 +107,81 @@ AS BEGIN TRY
 		GeneralHardness = LTRIM(RTRIM(JSON_VALUE(@json, '$.Readings.GeneralHardness'))),
 		Phosphate		= NULL -- I'm not really ready to handle saltwater, yet
 
-	INSERT INTO Readings.Ph (AquariumID, PH, [TimeStamp])
+
+	-- To hold created eventID temporarily 
+	DECLARE @Events table (EventID bigint)
+
+	-------------------------------------------------------------------------------------------------------------------------------
+	-- Logic
+	-------------------------------------------------------------------------------------------------------------------------------
+	-- Create the reading event
+	INSERT INTO Readings.[Events] (AquariumID, [TimeStamp])
+	OUTPUT inserted.EventID INTO @Events
+	SELECT
+		@AquariumID,
+		getdate() AT TIME ZONE @TZ
+
+	IF (SELECT count(EventID) FROM @Events) != 1 BEGIN
+		;THROW 60100, 'More then one event created. You should never see this error.', @SpState
+		END
+	DECLARE @EventID int
+	SET @EventID = (SELECT EventID FROM @Events)
+
+
+	-- Create entries in the Readings tables, associated to the event that was just created
+	INSERT INTO Readings.Ph (PH, EventID)
 	SELECT 
-		AquariumID,
 		PH,
-		-- is this the way I want to handle timestamps? Or, do I want somethign wiht timezones?
-		getdate()
+		@EventID
 	FROM @Readings 
 	WHERE PH IS NOT NULL
 
-	INSERT INTO Readings.Temperature (AquariumID, Temperature, [TimeStamp])
+	INSERT INTO Readings.Temperature (Temperature, EventID)
 	SELECT
-		AquariumID,
 		Temperature,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Temperature IS NOT NULL		
 	
-	INSERT INTO Readings.Ammonia (AquariumID, Ammonia, [TimeStamp])
+	INSERT INTO Readings.Ammonia (Ammonia, EventID)
 	SELECT
-		AquariumID,
 		Ammonia,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Ammonia IS NOT NULL
 
-	INSERT INTO Readings.Nitrite (AquariumID, Nitrite, [TimeStamp])
+	INSERT INTO Readings.Nitrite (Nitrite, EventID)
 	SELECT
-		AquariumID,
 		Nitrite,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Nitrite IS NOT NULL
 
-	INSERT INTO Readings.Nitrate (AquariumID, Nitrate, [TimeStamp])
+	INSERT INTO Readings.Nitrate (Nitrate, EventID)
 	SELECT
-		AquariumID,
 		Nitrate,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Nitrate IS NOT NULL
 
-	INSERT INTO Readings.Alkalinity (AquariumID, Alkalinity, [TimeStamp])
+	INSERT INTO Readings.Alkalinity (Alkalinity, EventID)
 	SELECT
-		AquariumID,
 		Alkalinity,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Alkalinity IS NOT NULL
 
-	INSERT INTO Readings.GeneralHardness (AquariumID, GeneralHardness, [TimeStamp])
+	INSERT INTO Readings.GeneralHardness (GeneralHardness, EventID)
 	SELECT
-		AquariumID,
 		GeneralHardness,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE GeneralHardness IS NOT NULL
 
-	INSERT INTO Readings.Phosphate (AquariumID, Phosphate, [TimeStamp])
+	INSERT INTO Readings.Phosphate (Phosphate, EventID)
 	SELECT
-		AquariumID,
 		Phosphate,
-		getdate()
+		@EventID
 	FROM @Readings
 	WHERE Phosphate IS NOT NULL
 
@@ -192,8 +222,8 @@ GO
 EXEC dbo.saveReadings '{
 	"AquariumID":1,
 	"Readings":{
-		"PH":7.1,
-		"Temperature":79,
+		"PH":7.0,
+		"Temperature":77.3,
 		"Ammonia":0.0,
 		"Nitrite":0.25,
 		"Nitrate":10,
